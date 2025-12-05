@@ -4,6 +4,9 @@
 	"private": true,
 	"scripts": {
 		"deploy": "wrangler deploy",
+		"deploy:full": "./deploy.sh",
+		"backup": "./backup.sh",
+		"deploy:with-backup": "./backup.sh && ./deploy.sh",
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
 		"cf-typegen": "wrangler types"

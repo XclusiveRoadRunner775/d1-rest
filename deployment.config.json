@@ -1,0 +1,20 @@
+{
+  "deployment": {
+    "environment": "production",
+    "auto_backup_before_deploy": true,
+    "run_type_check": true,
+    "notifications": {
+      "enabled": false,
+      "email": "",
+      "slack_webhook": ""
+    }
+  },
+  "wrangler": {
+    "config_file": "wrangler.jsonc"
+  },
+  "logging": {
+    "log_directory": "logs",
+    "keep_logs_days": 30,
+    "verbose": true
+  }
+}

@@ -1,6 +1,11 @@
 # d1-secret-rest
 Fetch results or execute queries against a D1 CRUD REST API
 
+## 🚀 Quick Links
+
+- **[Deployment Guide](./DEPLOYMENT.md)** - Complete deployment and backup documentation
+- **[Quick Start](./QUICKSTART.md)** - Quick reference for deployment commands
+
 ## Performance
 This REST API implementation offers significantly faster performance compared to the official D1 API:
 
@@ -185,3 +190,67 @@ The response includes:
 - All column names and table names are sanitized to prevent SQL injection
 - Only alphanumeric characters and underscores are allowed in identifiers
 - Authentication is required for all endpoints
+
+## 🛠️ Deployment & Operations
+
+### Automated Deployment
+This repository includes automated deployment scripts with comprehensive logging:
+
+```bash
+# Full deployment with validation and logging
+npm run deploy:full
+
+# Deployment with automatic backup
+npm run deploy:with-backup
+
+# Create backup
+npm run backup
+```
+
+### Quick Setup
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Login to Cloudflare (first time only)
+wrangler login
+
+# 3. Deploy to Cloudflare Workers
+npm run deploy:full
+```
+
+For complete deployment and backup documentation, see:
+- **[Deployment Guide](./DEPLOYMENT.md)** - Full documentation
+- **[Quick Reference](./QUICKSTART.md)** - Command reference
+
+### Development
+```bash
+# Local development server
+npm run dev
+
+# Generate TypeScript types
+npm run cf-typegen
+```
+
+## 📦 Backup System
+
+The repository includes automated backup functionality:
+- Syncs to iCloud Drive by default
+- Maintains backup rotation (keeps last 10 backups)
+- Includes git metadata and backup manifests
+- Comprehensive logging
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for details.
+
+## 📊 Logging
+
+All deployment and backup operations are logged:
+- `logs/deployment_*.log` - Deployment logs
+- `logs/backup_*.log` - Backup logs
+- Deployment metadata in JSON format
+
+## 🔧 Configuration
+
+- `wrangler.jsonc` - Cloudflare Worker configuration
+- `deployment.config.json` - Deployment settings
+- `backup.config.json` - Backup settings
