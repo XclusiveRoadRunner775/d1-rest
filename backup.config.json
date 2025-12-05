@@ -1,0 +1,26 @@
+{
+  "backup": {
+    "enabled": true,
+    "backup_location": "$HOME/Library/Mobile Documents/com~apple~CloudDocs/d1-rest-backups",
+    "keep_count": 10,
+    "exclude_patterns": [
+      "node_modules",
+      ".git",
+      "logs",
+      "*.log",
+      ".DS_Store",
+      "dist",
+      ".cache"
+    ]
+  },
+  "schedule": {
+    "auto_backup_on_deploy": true,
+    "periodic_backup": false,
+    "backup_interval_hours": 24
+  },
+  "notification": {
+    "enabled": false,
+    "on_success": false,
+    "on_failure": true
+  }
+}
