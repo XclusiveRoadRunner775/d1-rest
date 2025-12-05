@@ -3,7 +3,7 @@
 # Deployment Test Script (Simulation)
 # This script simulates the deployment process to verify the workflow
 
-set -e
+set -e  # Exit on error
 
 echo "🧪 Testing Deployment and Backup Scripts"
 echo "========================================"
@@ -87,11 +87,8 @@ if grep -q "deploy:full" package.json && \
    grep -q "backup" package.json && \
    grep -q "deploy:with-backup" package.json; then
     echo "✅ NPM scripts configured correctly"
-    echo "   Available commands:"
-    echo "   - npm run deploy"
-    echo "   - npm run deploy:full"
-    echo "   - npm run backup"
-    echo "   - npm run deploy:with-backup"
+    echo "   Available deployment scripts:"
+    grep -E "\"(deploy|backup|dev|start)\":" package.json | sed 's/^[[:space:]]*/   /'
 else
     echo "❌ NPM scripts not properly configured"
     exit 1

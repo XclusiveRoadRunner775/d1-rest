@@ -28,25 +28,25 @@ mkdir -p "${LOG_DIR}"
 # Logging functions
 log_info() {
     local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-    echo -e "${BLUE}[INFO]${NC} $*" | tee -a "${LOG_FILE}"
+    echo -e "${BLUE}[INFO]${NC} $*"
     echo "[${timestamp}] [INFO] $*" >> "${LOG_FILE}"
 }
 
 log_success() {
     local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-    echo -e "${GREEN}[SUCCESS]${NC} $*" | tee -a "${LOG_FILE}"
+    echo -e "${GREEN}[SUCCESS]${NC} $*"
     echo "[${timestamp}] [SUCCESS] $*" >> "${LOG_FILE}"
 }
 
 log_warning() {
     local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-    echo -e "${YELLOW}[WARNING]${NC} $*" | tee -a "${LOG_FILE}"
+    echo -e "${YELLOW}[WARNING]${NC} $*"
     echo "[${timestamp}] [WARNING] $*" >> "${LOG_FILE}"
 }
 
 log_error() {
     local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-    echo -e "${RED}[ERROR]${NC} $*" | tee -a "${LOG_FILE}"
+    echo -e "${RED}[ERROR]${NC} $*"
     echo "[${timestamp}] [ERROR] $*" >> "${LOG_FILE}"
 }
 
@@ -68,7 +68,8 @@ load_config() {
         if command -v jq &> /dev/null; then
             local config_location=$(jq -r '.backup.backup_location // empty' "${BACKUP_CONFIG}")
             if [ -n "${config_location}" ]; then
-                BACKUP_LOCATION="${config_location}"
+                # Expand environment variables in the config location
+                BACKUP_LOCATION=$(eval echo "${config_location}")
                 log_info "Backup location from config: ${BACKUP_LOCATION}"
             fi
         else
