@@ -66,7 +66,7 @@ load_config() {
         
         # Extract backup location from JSON config (requires jq or manual parsing)
         if command -v jq &> /dev/null; then
-            local config_location=$(jq -r '.backup_location // empty' "${BACKUP_CONFIG}")
+            local config_location=$(jq -r '.backup.backup_location // empty' "${BACKUP_CONFIG}")
             if [ -n "${config_location}" ]; then
                 BACKUP_LOCATION="${config_location}"
                 log_info "Backup location from config: ${BACKUP_LOCATION}"

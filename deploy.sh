@@ -22,29 +22,29 @@ NC='\033[0m' # No Color
 # Create logs directory if it doesn't exist
 mkdir -p "${LOG_DIR}"
 
-# Logging function
-log() {
-    local level="$1"
-    shift
-    local message="$*"
-    local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-    echo "[${timestamp}] [${level}] ${message}" | tee -a "${LOG_FILE}"
-}
-
+# Logging functions
 log_info() {
-    echo -e "${BLUE}[INFO]${NC} $*" | tee -a "${LOG_FILE}"
+    local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+    echo -e "${BLUE}[INFO]${NC} $*"
+    echo "[${timestamp}] [INFO] $*" >> "${LOG_FILE}"
 }
 
 log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $*" | tee -a "${LOG_FILE}"
+    local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+    echo -e "${GREEN}[SUCCESS]${NC} $*"
+    echo "[${timestamp}] [SUCCESS] $*" >> "${LOG_FILE}"
 }
 
 log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $*" | tee -a "${LOG_FILE}"
+    local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+    echo -e "${YELLOW}[WARNING]${NC} $*"
+    echo "[${timestamp}] [WARNING] $*" >> "${LOG_FILE}"
 }
 
 log_error() {
-    echo -e "${RED}[ERROR]${NC} $*" | tee -a "${LOG_FILE}"
+    local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+    echo -e "${RED}[ERROR]${NC} $*"
+    echo "[${timestamp}] [ERROR] $*" >> "${LOG_FILE}"
 }
 
 # Print deployment header
