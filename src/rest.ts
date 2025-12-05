@@ -3,13 +3,22 @@ import type { Env } from './index';
 
 /**
  * Sanitizes an identifier by removing all non-alphanumeric characters except underscores.
+ * Prevents SQL injection in column and table names.
  */
 function sanitizeIdentifier(identifier: string): string {
-    return identifier.replace(/[^a-zA-Z0-9_]/g, '');
+    if (!identifier || typeof identifier !== 'string') {
+        throw new Error('Invalid identifier');
+    }
+    const sanitized = identifier.replace(/[^a-zA-Z0-9_]/g, '');
+    if (sanitized.length === 0 || /^\d/.test(sanitized)) {
+        throw new Error('Invalid identifier: must start with letter or underscore');
+    }
+    return sanitized;
 }
 
 /**
  * Processing when the table name is a keyword in SQLite.
+ * Wraps identifier in backticks for safe SQL usage.
  */
 function sanitizeKeyword(identifier: string): string {
     return '`'+sanitizeIdentifier(identifier)+'`';
@@ -19,10 +28,9 @@ function sanitizeKeyword(identifier: string): string {
  * Handles GET requests to fetch records from a table
  */
 async function handleGet(c: Context<{ Bindings: Env }>, tableName: string, id?: string): Promise<Response> {
-    const table = sanitizeKeyword(tableName);
-    const searchParams = new URL(c.req.url).searchParams;
-    
     try {
+        const table = sanitizeKeyword(tableName);
+        const searchParams = new URL(c.req.url).searchParams;
         let query = `SELECT * FROM ${table}`;
         const params: any[] = [];
         const conditions: string[] = [];
@@ -73,7 +81,11 @@ async function handleGet(c: Context<{ Bindings: Env }>, tableName: string, id?: 
 
         return c.json(results);
     } catch (error: any) {
-        return c.json({ error: error.message }, 500);
+        console.error('GET error:', error);
+        return c.json({ 
+            error: 'Failed to fetch records', 
+            details: error.message 
+        }, 400);
     }
 }
 
@@ -81,14 +93,17 @@ async function handleGet(c: Context<{ Bindings: Env }>, tableName: string, id?: 
  * Handles POST requests to create new records
  */
 async function handlePost(c: Context<{ Bindings: Env }>, tableName: string): Promise<Response> {
-    const table = sanitizeKeyword(tableName);
-    const data = await c.req.json();
-
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
-        return c.json({ error: 'Invalid data format' }, 400);
-    }
-
     try {
+        const table = sanitizeKeyword(tableName);
+        const data = await c.req.json();
+
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+            return c.json({ error: 'Invalid data format: Expected object' }, 400);
+        }
+
+        if (Object.keys(data).length === 0) {
+            return c.json({ error: 'No data provided' }, 400);
+        }
         const columns = Object.keys(data).map(sanitizeIdentifier);
         const placeholders = columns.map(() => '?').join(', ');
         const query = `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})`;
@@ -98,9 +113,17 @@ async function handlePost(c: Context<{ Bindings: Env }>, tableName: string): Pro
             .bind(...params)
             .run();
 
-        return c.json({ message: 'Resource created successfully', data }, 201);
+        return c.json({ 
+            message: 'Resource created successfully', 
+            data,
+            meta: { success: result.success }
+        }, 201);
     } catch (error: any) {
-        return c.json({ error: error.message }, 500);
+        console.error('POST error:', error);
+        return c.json({ 
+            error: 'Failed to create record', 
+            details: error.message 
+        }, 400);
     }
 }
 
@@ -108,14 +131,22 @@ async function handlePost(c: Context<{ Bindings: Env }>, tableName: string): Pro
  * Handles PUT/PATCH requests to update records
  */
 async function handleUpdate(c: Context<{ Bindings: Env }>, tableName: string, id: string): Promise<Response> {
-    const table = sanitizeKeyword(tableName);
-    const data = await c.req.json();
-
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
-        return c.json({ error: 'Invalid data format' }, 400);
-    }
-
     try {
+        const table = sanitizeKeyword(tableName);
+        const data = await c.req.json();
+
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+            return c.json({ error: 'Invalid data format: Expected object' }, 400);
+        }
+
+        if (Object.keys(data).length === 0) {
+            return c.json({ error: 'No data provided for update' }, 400);
+        }
+
+        // Prevent updating the ID field
+        if ('id' in data) {
+            return c.json({ error: 'Cannot update ID field' }, 400);
+        }
         const setColumns = Object.keys(data)
             .map(sanitizeIdentifier)
             .map(col => `${col} = ?`)
@@ -128,9 +159,17 @@ async function handleUpdate(c: Context<{ Bindings: Env }>, tableName: string, id
             .bind(...params)
             .run();
 
-        return c.json({ message: 'Resource updated successfully', data });
+        return c.json({ 
+            message: 'Resource updated successfully', 
+            data,
+            meta: { success: result.success, changes: result.meta.changes }
+        });
     } catch (error: any) {
-        return c.json({ error: error.message }, 500);
+        console.error('UPDATE error:', error);
+        return c.json({ 
+            error: 'Failed to update record', 
+            details: error.message 
+        }, 400);
     }
 }
 
@@ -138,17 +177,28 @@ async function handleUpdate(c: Context<{ Bindings: Env }>, tableName: string, id
  * Handles DELETE requests to remove records
  */
 async function handleDelete(c: Context<{ Bindings: Env }>, tableName: string, id: string): Promise<Response> {
-    const table = sanitizeKeyword(tableName);
-
     try {
+        const table = sanitizeKeyword(tableName);
+
         const query = `DELETE FROM ${table} WHERE id = ?`;
         const result = await c.env.DB.prepare(query)
             .bind(id)
             .run();
 
-        return c.json({ message: 'Resource deleted successfully' });
+        if (result.meta.changes === 0) {
+            return c.json({ error: 'Record not found' }, 404);
+        }
+
+        return c.json({ 
+            message: 'Resource deleted successfully',
+            meta: { changes: result.meta.changes }
+        });
     } catch (error: any) {
-        return c.json({ error: error.message }, 500);
+        console.error('DELETE error:', error);
+        return c.json({ 
+            error: 'Failed to delete record', 
+            details: error.message 
+        }, 400);
     }
 }
 
