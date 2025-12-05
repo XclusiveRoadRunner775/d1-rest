@@ -83,15 +83,31 @@ echo ""
 
 # Test 6: Verify npm scripts
 echo "Test 6: Checking npm scripts..."
-if grep -q "deploy:full" package.json && \
-   grep -q "backup" package.json && \
-   grep -q "deploy:with-backup" package.json; then
-    echo "✅ NPM scripts configured correctly"
-    echo "   Available deployment scripts:"
-    grep -E "\"(deploy|backup|dev|start)\":" package.json | sed 's/^[[:space:]]*/   /'
+# Extract scripts section from package.json and check for required scripts
+if command -v jq &> /dev/null; then
+    scripts=$(jq -r '.scripts | keys[]' package.json 2>/dev/null || echo "")
+    if echo "$scripts" | grep -q "deploy:full" && \
+       echo "$scripts" | grep -q "backup" && \
+       echo "$scripts" | grep -q "deploy:with-backup"; then
+        echo "✅ NPM scripts configured correctly"
+        echo "   Available deployment scripts:"
+        jq -r '.scripts | to_entries[] | select(.key | test("deploy|backup|dev|start")) | "   \"\(.key)\": \"\(.value)\""' package.json
+    else
+        echo "❌ Required NPM scripts not found"
+        exit 1
+    fi
 else
-    echo "❌ NPM scripts not properly configured"
-    exit 1
+    # Fallback when jq is not available
+    if grep -q "deploy:full" package.json && \
+       grep -q "backup" package.json && \
+       grep -q "deploy:with-backup" package.json; then
+        echo "✅ NPM scripts configured correctly"
+        echo "   Available deployment scripts:"
+        grep -E "\"(deploy|backup|dev|start)\":" package.json | sed 's/^[[:space:]]*/   /'
+    else
+        echo "❌ NPM scripts not properly configured"
+        exit 1
+    fi
 fi
 echo ""
 

@@ -211,13 +211,13 @@ maintain_backup_rotation() {
     log_info "Maintaining backup rotation (keeping last ${keep_count} backups)..."
     
     if [ -d "${BACKUP_LOCATION}" ]; then
-        local backup_count=$(find "${BACKUP_LOCATION}" -maxdepth 1 -type d -name "202*" | wc -l)
+        local backup_count=$(find "${BACKUP_LOCATION}" -maxdepth 1 -type d -regex '.*/[0-9]\{8\}_[0-9]\{6\}' | wc -l)
         
         if [ "${backup_count}" -gt "${keep_count}" ]; then
             log_info "Found ${backup_count} backups, removing oldest ones..."
             
-            # Get oldest backups to remove
-            find "${BACKUP_LOCATION}" -maxdepth 1 -type d -name "202*" | sort | head -n -${keep_count} | while read old_backup; do
+            # Get oldest backups to remove (using more flexible timestamp pattern)
+            find "${BACKUP_LOCATION}" -maxdepth 1 -type d -regex '.*/[0-9]\{8\}_[0-9]\{6\}' | sort | head -n -${keep_count} | while read old_backup; do
                 log_info "Removing old backup: ${old_backup}"
                 rm -rf "${old_backup}"
             done

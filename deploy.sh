@@ -172,7 +172,7 @@ main() {
 }
 
 # Error handler
-trap 'log_error "Deployment failed at line $LINENO. Check ${LOG_FILE} for details."; exit 1' ERR
+trap 'log_error "Deployment failed during deployment process. Check ${LOG_FILE} for details."; exit 1' ERR
 
 # Run main function
 main
